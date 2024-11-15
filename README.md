@@ -28,6 +28,8 @@ Chrome の拡張機能設定からデベロッパーモードをオンにし、�
 │   ├── icon_16.png # 拡張機能のアイコン
 │   ├── icon_48.png # 拡張機能のアイコン
 │   └── icon_128.png # 拡張機能のアイコン
+├─ zip
+│   └── freee_tab_opener_v0.0.1.zip # ローカルインストール用のzipファイル
 ├─ background.js # actionボタンを押した際に実行するスクリプト
 ├─ manifest.json # 拡張機能の設定ファイル
 └─ README.md # このファイル

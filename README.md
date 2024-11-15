@@ -21,6 +21,10 @@ actionボタンを押すとfreee の打刻ページ(`https://p.secure.freee.co.j
 
 Chrome の拡張機能設定からデベロッパーモードをオンにし、このディレクトリを読み込みます。
 
+または、以下のダウンロードリンクから最新版をダウンロードして読み込んでください。
+
+- [freee_tab_opener_v0.0.1.zip](./zip/freee_tab_opener_v0.0.1.zip)  
+
 ## ファイル構成
 
 ```files

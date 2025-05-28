@@ -1,5 +1,9 @@
 chrome.action.onClicked.addListener(async () => {
-  const url = 'https://p.secure.freee.co.jp/';
+  const moveUrl = 'https://p.secure.freee.co.jp/';
+  const checkUrls = [
+    'https://p.secure.freee.co.jp/',
+    'https://accounts.secure.freee.co.jp/sessions/new'
+  ];
   
   try {
     let tabs = await chrome.tabs.query({});
@@ -7,7 +11,7 @@ chrome.action.onClicked.addListener(async () => {
 
     // Check if the tab with the specific URL exists
     for (let tab of tabs) {
-      if (tab.url.startsWith(url)) {
+      if (checkUrls.some(url => tab.url.startsWith(url))) {
         foundTab = tab;
         break;
       }
@@ -20,7 +24,7 @@ chrome.action.onClicked.addListener(async () => {
       chrome.tabs.reload(foundTab.id);
     } else {
       // Create a new tab with the given URL
-      await chrome.tabs.create({ url: url });
+      await chrome.tabs.create({ url: moveUrl });
     }
   } catch (error) {
     console.error('An error occurred:', error);

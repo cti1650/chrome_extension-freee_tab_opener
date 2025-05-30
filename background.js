@@ -65,15 +65,69 @@ chrome.runtime.onStartup.addListener(async () => {
   }
 });
 
+// スリープ復帰検知のための変数
+let lastActiveTime = Date.now();
+let isFirstCheck = true;
+
+// スリープからの復帰を検知する関数
+async function checkSleepResume() {
+  const currentTime = Date.now();
+  const timeDiff = currentTime - lastActiveTime;
+  
+  // 5分以上の空白時間があった場合、スリープから復帰したと判断
+  // 初回チェックは除外
+  if (!isFirstCheck && timeDiff > 5 * 60 * 1000) {
+    console.log('スリープからの復帰を検知しました');
+    
+    try {
+      const result = await chrome.storage.sync.get(['wakeUpEnabled']);
+      
+      if (result.wakeUpEnabled) {
+        console.log('スリープ復帰時の自動起動が有効になっています');
+        
+        // 少し待ってからFreeeタブを開く
+        setTimeout(async () => {
+          await openFreeeTab();
+        }, 1000);
+      }
+    } catch (error) {
+      console.error('スリープ復帰処理でエラーが発生しました:', error);
+    }
+  }
+  
+  lastActiveTime = currentTime;
+  isFirstCheck = false;
+}
+
+// 定期的にスリープ復帰をチェック（30秒間隔）
+setInterval(checkSleepResume, 30000);
+
+// タブの状態変化を監視してアクティブ時間を更新
+chrome.tabs.onActivated.addListener(() => {
+  lastActiveTime = Date.now();
+});
+
+chrome.tabs.onUpdated.addListener(() => {
+  lastActiveTime = Date.now();
+});
+
 // 拡張機能のインストール時にデフォルト設定を保存
 chrome.runtime.onInstalled.addListener(async () => {
   try {
-    const result = await chrome.storage.sync.get(['autoStartEnabled']);
+    const result = await chrome.storage.sync.get(['autoStartEnabled', 'wakeUpEnabled']);
     
-    // 初回インストール時は自動起動を無効にする
+    // 初回インストール時はデフォルト設定を保存
+    const updates = {};
     if (result.autoStartEnabled === undefined) {
-      await chrome.storage.sync.set({ autoStartEnabled: false });
-      console.log('デフォルト設定を保存しました');
+      updates.autoStartEnabled = false;
+    }
+    if (result.wakeUpEnabled === undefined) {
+      updates.wakeUpEnabled = false;
+    }
+    
+    if (Object.keys(updates).length > 0) {
+      await chrome.storage.sync.set(updates);
+      console.log('デフォルト設定を保存しました:', updates);
     }
   } catch (error) {
     console.error('初期設定の保存でエラーが発生しました:', error);

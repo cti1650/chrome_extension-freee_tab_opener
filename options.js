@@ -1,6 +1,7 @@
 // DOM要素の取得
 const autoStartCheckbox = document.getElementById('autoStart');
 const wakeUpCheckbox = document.getElementById('wakeUp');
+const wakeUpTimeSelect = document.getElementById('wakeUpTime');
 const statusDiv = document.getElementById('status');
 
 // ステータスメッセージを表示する関数
@@ -9,7 +10,6 @@ function showStatus(message, isError = false) {
     statusDiv.className = `status ${isError ? 'error' : 'success'}`;
     statusDiv.style.display = 'block';
     
-    // 3秒後に非表示にする
     setTimeout(() => {
         statusDiv.style.display = 'none';
     }, 3000);
@@ -18,9 +18,18 @@ function showStatus(message, isError = false) {
 // 設定を読み込む関数
 async function loadOptions() {
     try {
-        const result = await chrome.storage.sync.get(['autoStartEnabled', 'wakeUpEnabled']);
+        const result = await chrome.storage.sync.get([
+            'autoStartEnabled', 
+            'wakeUpEnabled', 
+            'wakeUpTimeThreshold'
+        ]);
         autoStartCheckbox.checked = result.autoStartEnabled || false;
         wakeUpCheckbox.checked = result.wakeUpEnabled || false;
+        wakeUpTimeSelect.value = result.wakeUpTimeThreshold || '45'; // デフォルト45分
+        
+        // wakeUpTimeSelect の有効/無効状態を設定
+        wakeUpTimeSelect.disabled = !wakeUpCheckbox.checked;
+
     } catch (error) {
         console.error('設定の読み込みに失敗しました:', error);
         showStatus('設定の読み込みに失敗しました', true);
@@ -30,14 +39,23 @@ async function loadOptions() {
 // 設定を保存する関数
 async function saveOptions() {
     try {
+        const autoStartEnabled = autoStartCheckbox.checked;
+        const wakeUpEnabled = wakeUpCheckbox.checked;
+        const wakeUpTimeThreshold = parseInt(wakeUpTimeSelect.value, 10);
+
         await chrome.storage.sync.set({
-            autoStartEnabled: autoStartCheckbox.checked,
-            wakeUpEnabled: wakeUpCheckbox.checked
+            autoStartEnabled: autoStartEnabled,
+            wakeUpEnabled: wakeUpEnabled,
+            wakeUpTimeThreshold: wakeUpTimeThreshold 
         });
         
+        // wakeUpTimeSelect の有効/無効状態を更新
+        wakeUpTimeSelect.disabled = !wakeUpEnabled;
+        
         console.log('設定が保存されました:', {
-            autoStartEnabled: autoStartCheckbox.checked,
-            wakeUpEnabled: wakeUpCheckbox.checked
+            autoStartEnabled,
+            wakeUpEnabled,
+            wakeUpTimeThreshold
         });
         
         showStatus('設定が保存されました');
@@ -51,3 +69,4 @@ async function saveOptions() {
 document.addEventListener('DOMContentLoaded', loadOptions);
 autoStartCheckbox.addEventListener('change', saveOptions);
 wakeUpCheckbox.addEventListener('change', saveOptions);
+wakeUpTimeSelect.addEventListener('change', saveOptions);

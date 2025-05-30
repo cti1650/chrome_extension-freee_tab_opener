@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Freee Tab Opener",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "description": "Freee非公式のChrome拡張機能です。",
   "permissions": ["tabs", "storage"],
   "action": {

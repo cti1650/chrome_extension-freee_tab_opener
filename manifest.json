@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "name": "Freee Tab Opener",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Freee非公式のChrome拡張機能です。",
-  "permissions": ["tabs"],
+  "permissions": ["tabs", "storage"],
   "action": {
     "default_icon": {
       "16": "icons/icon_16.png",
@@ -18,5 +18,15 @@
     "16": "icons/icon_16.png",
     "48": "icons/icon_48.png",
     "128": "icons/icon_128.png"
+  },
+  "options_page": "options.html",
+  "commands": {
+    "open-freee": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+F",
+        "mac": "Command+Shift+F"
+      },
+      "description": "Freeeタブを開く"
+    }
   }
 }

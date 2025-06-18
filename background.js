@@ -77,31 +77,31 @@ async function updateLastActiveTime(eventType = "unknown") {
     const timeDiff = currentTime - effectiveLastActiveTime;
     console.log(`前回からの経過時間: ${Math.round(timeDiff / 1000)}秒`);
 
-    if (isInitialized) { // 初期化済みの場合のみスリープ復帰を考慮
+    if (isInitialized) { // 初期化済みの場合のみブラウザ操作復帰を考慮
       const settings = await chrome.storage.sync.get(['wakeUpEnabled', 'wakeUpTimeThreshold']);
       const wakeUpEnabled = settings.wakeUpEnabled || false;
       const wakeUpTimeThresholdMinutes = settings.wakeUpTimeThreshold || 30; // デフォルト30分
       const timeDiffThresholdMs = wakeUpTimeThresholdMinutes * 60 * 1000;
 
-      console.log(`スリープ復帰設定: 有効=${wakeUpEnabled}, 検知時間=${wakeUpTimeThresholdMinutes}分 (${timeDiffThresholdMs}ms)`);
+      console.log(`ブラウザ操作復帰設定: 有効=${wakeUpEnabled}, 検知時間=${wakeUpTimeThresholdMinutes}分 (${timeDiffThresholdMs}ms)`);
 
       if (timeDiff > timeDiffThresholdMs) {
         console.log(
-          `スリープからの復帰の可能性を検知しました (${Math.round(
+          `ブラウザ操作の復帰の可能性を検知しました (${Math.round(
             timeDiff / 1000 / 60
           )}分間の非アクティブ)`
         );
         if (wakeUpEnabled) {
-          console.log("スリープ復帰時の自動起動が有効になっています");
+          console.log("ブラウザ操作復帰時の自動起動が有効になっています");
           setTimeout(async () => {
             await openFreeeTab();
           }, 1000);
         } else {
-          console.log("スリープ復帰時の自動起動は無効です。");
+          console.log("ブラウザ操作復帰時の自動起動は無効です。");
         }
       }
     } else {
-        console.log("まだ初期化されていません。スリープ復帰検知はスキップします。");
+        console.log("まだ初期化されていません。ブラウザ操作復帰検知はスキップします。");
     }
 
     await chrome.storage.local.set({

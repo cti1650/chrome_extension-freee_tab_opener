@@ -25,7 +25,7 @@ async function loadOptions() {
         ]);
         autoStartCheckbox.checked = result.autoStartEnabled || false;
         wakeUpCheckbox.checked = result.wakeUpEnabled || false;
-        wakeUpTimeSelect.value = result.wakeUpTimeThreshold || '45'; // デフォルト45分
+        wakeUpTimeSelect.value = result.wakeUpTimeThreshold || '480'; // デフォルト8時間
         
         // wakeUpTimeSelect の有効/無効状態を設定
         wakeUpTimeSelect.disabled = !wakeUpCheckbox.checked;

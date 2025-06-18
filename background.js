@@ -80,7 +80,7 @@ async function updateLastActiveTime(eventType = "unknown") {
     if (isInitialized) { // 初期化済みの場合のみブラウザ操作復帰を考慮
       const settings = await chrome.storage.sync.get(['wakeUpEnabled', 'wakeUpTimeThreshold']);
       const wakeUpEnabled = settings.wakeUpEnabled || false;
-      const wakeUpTimeThresholdMinutes = settings.wakeUpTimeThreshold || 30; // デフォルト30分
+      const wakeUpTimeThresholdMinutes = settings.wakeUpTimeThreshold || 480; // デフォルト8時間
       const timeDiffThresholdMs = wakeUpTimeThresholdMinutes * 60 * 1000;
 
       console.log(`ブラウザ操作復帰設定: 有効=${wakeUpEnabled}, 検知時間=${wakeUpTimeThresholdMinutes}分 (${timeDiffThresholdMs}ms)`);
@@ -153,7 +153,7 @@ chrome.runtime.onInstalled.addListener(async (details) => {
       updates.wakeUpEnabled = false;
     }
     if (currentSettings.wakeUpTimeThreshold === undefined) {
-      updates.wakeUpTimeThreshold = 45; // デフォルト45分
+      updates.wakeUpTimeThreshold = 480; // デフォルト8時間
     }
 
     if (Object.keys(updates).length > 0) {

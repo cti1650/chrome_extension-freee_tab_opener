@@ -39,9 +39,22 @@ chrome.commands.onCommand.addListener(async (command) => {
   }
 });
 
+// 端末で機能が有効かどうかを確認する関数
+async function isDeviceEnabled() {
+  const localData = await chrome.storage.local.get(["deviceEnabled"]);
+  // デフォルトはtrue（未設定の場合は有効）
+  return localData.deviceEnabled !== false;
+}
+
 chrome.runtime.onStartup.addListener(async () => {
   console.log("ブラウザが起動しました");
   try {
+    // 端末で機能が有効か確認
+    if (!await isDeviceEnabled()) {
+      console.log("この端末では機能が無効になっています");
+      return;
+    }
+
     const result = await chrome.storage.sync.get(["autoStartEnabled"]);
     if (result.autoStartEnabled) {
       console.log("自動起動が有効になっています");
@@ -92,10 +105,15 @@ async function updateLastActiveTime(eventType = "unknown") {
           )}分間の非アクティブ)`
         );
         if (wakeUpEnabled) {
-          console.log("ブラウザ操作復帰時の自動起動が有効になっています");
-          setTimeout(async () => {
-            await openFreeeTab();
-          }, 1000);
+          // 端末で機能が有効か確認
+          if (!await isDeviceEnabled()) {
+            console.log("この端末では機能が無効になっています");
+          } else {
+            console.log("ブラウザ操作復帰時の自動起動が有効になっています");
+            setTimeout(async () => {
+              await openFreeeTab();
+            }, 1000);
+          }
         } else {
           console.log("ブラウザ操作復帰時の自動起動は無効です。");
         }

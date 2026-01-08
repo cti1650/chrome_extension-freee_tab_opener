@@ -25,12 +25,42 @@
         padding-bottom: 10px;
         margin-bottom: 30px;
       }
+      .section-header {
+        font-size: 14px;
+        font-weight: bold;
+        color: #666;
+        margin-bottom: 15px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #e0e0e0;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .section-header .badge {
+        font-size: 11px;
+        font-weight: normal;
+        padding: 2px 8px;
+        border-radius: 10px;
+        color: white;
+      }
+      .section-header .badge.local {
+        background-color: #ff9800;
+      }
+      .section-header .badge.sync {
+        background-color: #2196f3;
+      }
       .option-group {
         margin-bottom: 25px;
         padding: 20px;
         border: 1px solid #e0e0e0;
         border-radius: 6px;
         background-color: #fafafa;
+      }
+      .option-group.local-setting {
+        border-left: 4px solid #ff9800;
+      }
+      .option-group.sync-setting {
+        border-left: 4px solid #2196f3;
       }
       .option-title {
         font-weight: bold;
@@ -120,7 +150,31 @@
     <div class="container">
       <h1>Freee Tab Opener - 設定</h1>
 
-      <div class="option-group">
+      <!-- 端末固有設定セクション -->
+      <div class="section-header">
+        <span>この端末の設定</span>
+        <span class="badge local">端末固有</span>
+      </div>
+
+      <div class="option-group local-setting">
+        <div class="option-title">機能の有効化</div>
+        <div class="option-description">
+          この端末で拡張機能の自動起動機能を有効にします。<br />
+          オフにすると、この端末では自動起動機能が動作しません。
+        </div>
+        <div class="checkbox-container">
+          <input type="checkbox" id="deviceEnabled" checked />
+          <label for="deviceEnabled">この端末で機能を有効にする</label>
+        </div>
+      </div>
+
+      <!-- 同期設定セクション -->
+      <div class="section-header">
+        <span>共通設定</span>
+        <span class="badge sync">端末間で同期</span>
+      </div>
+
+      <div class="option-group sync-setting">
         <div class="option-title">自動起動</div>
         <div class="option-description">
           ブラウザを起動した時に自動的にFreeeタブを開きます。<br />
@@ -132,7 +186,7 @@
         </div>
       </div>
 
-      <div class="option-group">
+      <div class="option-group sync-setting">
         <div class="option-title">ブラウザ操作の再開時の自動起動</div>
         <div class="option-description">
           ブラウザの操作が再開されたときに自動的にFreeeタブを開きます。<br />

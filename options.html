@@ -178,7 +178,8 @@
         <div class="option-title">自動起動</div>
         <div class="option-description">
           ブラウザを起動した時に自動的にFreeeタブを開きます。<br />
-          ※新しいウィンドウを開いた時は除外されます。
+          ※新しいウィンドウを開いた時は除外されます。<br />
+          ※タブの読み込みが落ち着いてから5秒後に開きます（最大20秒）。
         </div>
         <div class="checkbox-container">
           <input type="checkbox" id="autoStart" />
@@ -190,7 +191,8 @@
         <div class="option-title">ブラウザ操作の再開時の自動起動</div>
         <div class="option-description">
           ブラウザの操作が再開されたときに自動的にFreeeタブを開きます。<br />
-          ※指定時間以上のアクティビティ停止後の再開時に動作します。
+          ※指定時間以上のアクティビティ停止後の再開時に動作します。<br />
+          ※ブラウザ起動直後は動作しません（起動時は「自動起動」の設定に従います）。
         </div>
         <div class="checkbox-container">
           <input type="checkbox" id="wakeUp" />

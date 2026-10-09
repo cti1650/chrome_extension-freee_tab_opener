@@ -1,5 +1,17 @@
-// Freeeタブを開く共通の関数
-async function openFreeeTab() {
+// 実行中のopenFreeeTab（多重実行による重複タブ作成を防ぐ）
+let openFreeeTabPromise = null;
+
+// Freeeタブを開く共通の関数（実行中なら同じ処理の完了を待つ）
+function openFreeeTab() {
+  if (!openFreeeTabPromise) {
+    openFreeeTabPromise = openFreeeTabInternal().finally(() => {
+      openFreeeTabPromise = null;
+    });
+  }
+  return openFreeeTabPromise;
+}
+
+async function openFreeeTabInternal() {
   const moveUrl = "https://p.secure.freee.co.jp/";
   const checkUrls = [
     "https://p.secure.freee.co.jp/",
@@ -11,7 +23,9 @@ async function openFreeeTab() {
     let foundTab = null;
 
     for (let tab of tabs) {
-      if (checkUrls.some((url) => tab.url && tab.url.startsWith(url))) {
+      // 読み込み開始前のタブは url が空で pendingUrl に遷移先が入っている
+      const tabUrls = [tab.url, tab.pendingUrl].filter(Boolean);
+      if (checkUrls.some((url) => tabUrls.some((tabUrl) => tabUrl.startsWith(url)))) {
         foundTab = tab;
         break;
       }
@@ -27,6 +41,47 @@ async function openFreeeTab() {
   } catch (error) {
     console.error("An error occurred in openFreeeTab:", error);
   }
+}
+
+// 自動オープンはタブの更新が落ち着いてから1回だけ実行する
+const SETTLE_DELAY_MS = 5000; // 最後のタブ更新からの待機時間
+const SETTLE_MAX_WAIT_MS = 20000; // 更新が続く場合でもこの時間で実行する
+let settleTimer = null;
+let settleStartedAt = 0;
+const pendingOpenReasons = new Set();
+const STARTUP_GRACE_MS = 60000; // 起動後この時間は復帰検知による自動起動をしない
+let browserStartedAt = 0;
+
+// 自動オープンを予約する（reason: "startup" | "wakeUp"）
+function requestAutoOpen(reason) {
+  pendingOpenReasons.add(reason);
+  if (!settleTimer) {
+    settleStartedAt = Date.now();
+  }
+  restartSettleTimer();
+}
+
+// タブ更新のたびに待機をやり直す
+function restartSettleTimer() {
+  if (pendingOpenReasons.size === 0) return;
+  clearTimeout(settleTimer);
+  const remainingMaxWait = SETTLE_MAX_WAIT_MS - (Date.now() - settleStartedAt);
+  const delay = Math.max(0, Math.min(SETTLE_DELAY_MS, remainingMaxWait));
+  settleTimer = setTimeout(runAutoOpen, delay);
+}
+
+async function runAutoOpen() {
+  const reasons = new Set(pendingOpenReasons);
+  pendingOpenReasons.clear();
+  settleTimer = null;
+
+  // ブラウザ起動時は長時間の非アクティブとみなされるため、復帰検知では開かない
+  if (!reasons.has("startup") && Date.now() - browserStartedAt < STARTUP_GRACE_MS) {
+    console.log("ブラウザ起動直後のため、ブラウザ操作復帰による自動起動をスキップします");
+    return;
+  }
+  console.log(`タブの更新が落ち着いたため自動起動します (理由: ${[...reasons].join(", ")})`);
+  await openFreeeTab();
 }
 
 chrome.action.onClicked.addListener(async () => {
@@ -48,6 +103,7 @@ async function isDeviceEnabled() {
 
 chrome.runtime.onStartup.addListener(async () => {
   console.log("ブラウザが起動しました");
+  browserStartedAt = Date.now();
   try {
     // 端末で機能が有効か確認
     if (!await isDeviceEnabled()) {
@@ -58,16 +114,24 @@ chrome.runtime.onStartup.addListener(async () => {
     const result = await chrome.storage.sync.get(["autoStartEnabled"]);
     if (result.autoStartEnabled) {
       console.log("自動起動が有効になっています");
-      setTimeout(async () => {
-        await openFreeeTab();
-      }, 2000);
+      requestAutoOpen("startup");
     }
   } catch (error) {
     console.error("自動起動処理でエラーが発生しました:", error);
   }
 });
 
-async function updateLastActiveTime(eventType = "unknown") {
+// 読み取り→判定→保存を直列化し、同時発火したイベントが古い時刻を読まないようにする
+let lastActiveTimeQueue = Promise.resolve();
+
+function updateLastActiveTime(eventType = "unknown") {
+  lastActiveTimeQueue = lastActiveTimeQueue.then(() =>
+    updateLastActiveTimeInternal(eventType)
+  );
+  return lastActiveTimeQueue;
+}
+
+async function updateLastActiveTimeInternal(eventType) {
   try {
     const currentTime = Date.now(); // currentTimeを関数の最初に定義
     console.log(`アクティブ時間を更新: イベントタイプ = ${eventType}, 現在時刻: ${new Date(currentTime).toLocaleString()}`);
@@ -110,9 +174,7 @@ async function updateLastActiveTime(eventType = "unknown") {
             console.log("この端末では機能が無効になっています");
           } else {
             console.log("ブラウザ操作復帰時の自動起動が有効になっています");
-            setTimeout(async () => {
-              await openFreeeTab();
-            }, 1000);
+            requestAutoOpen("wakeUp");
           }
         } else {
           console.log("ブラウザ操作復帰時の自動起動は無効です。");
@@ -139,7 +201,15 @@ chrome.tabs.onActivated.addListener(async (activeInfo) => {
   await updateLastActiveTime("タブ切り替え");
 });
 
+chrome.tabs.onCreated.addListener(() => {
+  restartSettleTimer();
+});
+
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
+  if (changeInfo.status) {
+    // 読み込み中・完了のたびに自動起動の待機をやり直す
+    restartSettleTimer();
+  }
   if (changeInfo.status === "complete") {
     await updateLastActiveTime("タブ更新完了");
   } else if (changeInfo.title || (changeInfo.url && tab.active)) { // アクティブタブのURL/タイトル変更のみ
